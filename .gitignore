@@ -15,3 +15,7 @@ dataset/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# YOLO outputs and weights
+*.pt
+runs/
