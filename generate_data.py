@@ -4,6 +4,7 @@ import random
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 
+
 NUM_IMAGES = 100
 IMG_SIZE = 640
 TRAIN_RATIO = 0.8
@@ -31,4 +32,42 @@ def draw_satellite(img):
         random.randint(20, 60)
     )
 
-    
+    angle = random.uniform(0, 180)
+
+    rect = (center, size, angle)
+    box = cv2.boxPoints(rect).astype(int)
+
+    cv2.drawContours(img, [box], 0, 255, -1)
+
+def box_to_yolo(box):
+    x_coords = box[:,0]
+    y_coords = box[:,1]
+
+    x_min, x_max = x_coords.min(), x_coords.max()
+    y_min, y_max = y_coords.min(), y_coords.max()
+
+    x_center = ((x_min + x_max) / 2) / IMG_SIZE
+    y_center = ((y_min + y_max) / 2) / IMG_SIZE
+    width = (x_max - x_min) / IMG_SIZE
+    height = (y_max - y_min) / IMG_SIZE
+    return f"{CLASS_ID} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
+
+indices = list(range(NUM_IMAGES))
+train_idx, val_idx = train_test_split(indices, train_size=TRAIN_RATIO, random_state = 42)
+
+def generate(split, idx):
+    img = np.zeros((IMG_SIZE, IMG_SIZE), dtype = np.unit8)
+    img = add_starfield(img)
+    box = draw_satellite(img)
+
+    img_path = IMG_DIR / split / f"img_{idx}.jpg"
+    lbl_path = LBL_DIR / split / f"img_{idx}.txt"
+
+    cv2.imwrite(str(img_path), img)
+    with open(lbl_path, "w") as f:
+        f.write(box_to_yolo(box))
+
+    generate("train", train_idx)
+    generate("val", val_idx)
+
+    print("Synthetic dataset generated succesfully.")
