@@ -39,6 +39,8 @@ def draw_satellite(img):
 
     cv2.drawContours(img, [box], 0, 255, -1)
 
+    return box
+
 def box_to_yolo(box):
     x_coords = box[:,0]
     y_coords = box[:,1]
@@ -55,19 +57,21 @@ def box_to_yolo(box):
 indices = list(range(NUM_IMAGES))
 train_idx, val_idx = train_test_split(indices, train_size=TRAIN_RATIO, random_state = 42)
 
-def generate(split, idx):
-    img = np.zeros((IMG_SIZE, IMG_SIZE), dtype = np.unit8)
-    img = add_starfield(img)
-    box = draw_satellite(img)
+def generate(split, idxs):
+    
+    for i in idxs:
+        img = np.zeros((IMG_SIZE, IMG_SIZE), dtype = np.uint8)
+        img = add_starfield(img)
+        box = draw_satellite(img)
+        
+        img_path = IMG_DIR / split / f"img_{i}.jpg"
+        lbl_path = LBL_DIR / split / f"img_{i}.txt"
 
-    img_path = IMG_DIR / split / f"img_{idx}.jpg"
-    lbl_path = LBL_DIR / split / f"img_{idx}.txt"
+        cv2.imwrite(str(img_path), img)
+        with open(lbl_path, "w") as f:
+            f.write(box_to_yolo(box))
 
-    cv2.imwrite(str(img_path), img)
-    with open(lbl_path, "w") as f:
-        f.write(box_to_yolo(box))
+generate("train", train_idx)
+generate("val", val_idx)
 
-    generate("train", train_idx)
-    generate("val", val_idx)
-
-    print("Synthetic dataset generated succesfully.")
+print("Synthetic dataset generated succesfully.")
