@@ -17,4 +17,4 @@ using YOLOv8, and geometric pose estimation with OpenCV.
 4. Orientation estimation via geometry
 
 ## Status
-In progress
+Still in progress
